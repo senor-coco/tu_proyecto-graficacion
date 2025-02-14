@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico 3D Interactivo</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Gráfico 3D Interactivo</h1>
+
+    <div>
+        <label>X: <input type="number" id="x_value"></label>
+        <label>Y: <input type="number" id="y_value"></label>
+        <label>Z: <input type="number" id="z_value"></label>
+        <button onclick="addPoint()">Agregar Punto</button>
+        <button onclick="clearData()">Limpiar Gráfico</button>
+    </div>
+
+    <div id="plot" style="width: 100%; height: 600px;"></div>
+
+    <script>
+        async function fetchData() {
+            const response = await fetch('/get_data');
+            const data = await response.json();
+            renderPlot(data);
+        }
+
+        function renderPlot(data) {
+            const traces = [];
+
+            // Agregar puntos
+            data.points.forEach(point => {
+                traces.push({
+                    x: [point.x], y: [point.y], z: [point.z],
+                    mode: 'markers',
+                    marker: { size: 5, color: 'red' },
+                    type: 'scatter3d'
+                });
+            });
+
+            // Agregar líneas
+            data.lines.forEach(line => {
+                traces.push({
+                    x: [line.start.x, line.end.x],
+                    y: [line.start.y, line.end.y],
+                    z: [line.start.z, line.end.z],
+                    mode: 'lines',
+                    line: { color: 'blue', width: 2 },
+                    type: 'scatter3d'
+                });
+            });
+
+            Plotly.newPlot('plot', traces);
+        }
+
+        async function addPoint() {
+            const x = document.getElementById('x_value').value;
+            const y = document.getElementById('y_value').value;
+            const z = document.getElementById('z_value').value;
+
+            if (x === '' || y === '' || z === '') {
+                alert('Por favor, ingresa valores para Xa, Xb, Ya y Yb');
+                return;
+            }
+
+            const response = await fetch('/add_point', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ x: parseFloat(x), y: parseFloat(y), z: parseFloat(z) })
+            });
+
+            const updatedData = await response.json();
+            renderPlot(updatedData);
+        }
+
+        async function clearData() {
+            await fetch('/clear_data', { method: 'POST' });
+            fetchData();
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
+    
