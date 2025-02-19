@@ -45,7 +45,6 @@
 
         function renderPlot(data) {
             const traces = [];
-
             data.lines.forEach(line => {
                 traces.push({
                     x: line.x_values,
@@ -57,7 +56,6 @@
                     type: 'scatter3d'
                 });
             });
-
             Plotly.newPlot('plot', traces);
         }
 
@@ -78,14 +76,12 @@
                 body: JSON.stringify({ xa, ya, xb, yb })
             });
 
-            const updatedData = await response.json();
-            renderPlot(updatedData);
-            updateTable(updatedData);
+            fetchData(); // Recargar la tabla y el gráfico
         }
 
         function updateTable(data) {
             const tableBody = document.getElementById('coordTableBody');
-            tableBody.innerHTML = ''; // Limpiar la tabla antes de actualizar
+            tableBody.innerHTML = '';
 
             data.lines.forEach((line, index) => {
                 const row = document.createElement('tr');
@@ -102,8 +98,12 @@
         }
 
         async function deleteLine(index) {
-            await fetch(`/delete_line/${index}`, { method: 'POST' });
-            fetchData();
+            const response = await fetch(`/delete_line/${index}`, { method: 'POST' });
+            if (response.ok) {
+                fetchData(); // Recargar la tabla y el gráfico
+            } else {
+                alert("Error al eliminar la línea");
+            }
         }
 
         async function clearData() {

@@ -50,6 +50,7 @@ def delete_line(index):
         del data["lines"][index]
     return jsonify(data)
 
+
 @app.route('/clear_data', methods=['POST'])
 def clear_data():
     global data
