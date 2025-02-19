@@ -3,19 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gráfico 3D Interactivo</title>
+    <title>Algoritmo DDA - Gráfico 3D</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <h1>Gráfico 3D Interactivo</h1>
+    <h1>Implementación del Algoritmo DDA</h1>
 
     <div>
-        <label>X: <input type="number" id="x_value"></label>
-        <label>Y: <input type="number" id="y_value"></label>
-        <label>Z: <input type="number" id="z_value"></label>
-        <button onclick="addPoint()">Agregar Punto</button>
-        <button onclick="clearData()">Limpiar Gráfico</button>
+        <label>Xa: <input type="number" id="xa"></label>
+        <label>Ya: <input type="number" id="ya"></label>
+        <label>Xb: <input type="number" id="xb"></label>
+        <label>Yb: <input type="number" id="yb"></label>
+        <button onclick="addLine()">Trazar Línea</button>
+        <button onclick="clearData()">Limpiar</button>
     </div>
+
+    <h2>Historial de Coordenadas</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Xa</th>
+                <th>Ya</th>
+                <th>Xb</th>
+                <th>Yb</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody id="coordTableBody"></tbody>
+    </table>
 
     <div id="plot" style="width: 100%; height: 600px;"></div>
 
@@ -24,29 +40,20 @@
             const response = await fetch('/get_data');
             const data = await response.json();
             renderPlot(data);
+            updateTable(data);
         }
 
         function renderPlot(data) {
             const traces = [];
 
-            // Agregar puntos
-            data.points.forEach(point => {
-                traces.push({
-                    x: [point.x], y: [point.y], z: [point.z],
-                    mode: 'markers',
-                    marker: { size: 5, color: 'red' },
-                    type: 'scatter3d'
-                });
-            });
-
-            // Agregar líneas
             data.lines.forEach(line => {
                 traces.push({
-                    x: [line.start.x, line.end.x],
-                    y: [line.start.y, line.end.y],
-                    z: [line.start.z, line.end.z],
-                    mode: 'lines',
+                    x: line.x_values,
+                    y: line.y_values,
+                    z: Array(line.x_values.length).fill(0),
+                    mode: 'lines+markers',
                     line: { color: 'blue', width: 2 },
+                    marker: { size: 4, color: 'red' },
                     type: 'scatter3d'
                 });
             });
@@ -54,24 +61,49 @@
             Plotly.newPlot('plot', traces);
         }
 
-        async function addPoint() {
-            const x = document.getElementById('x_value').value;
-            const y = document.getElementById('y_value').value;
-            const z = document.getElementById('z_value').value;
+        async function addLine() {
+            const xa = parseFloat(document.getElementById('xa').value);
+            const ya = parseFloat(document.getElementById('ya').value);
+            const xb = parseFloat(document.getElementById('xb').value);
+            const yb = parseFloat(document.getElementById('yb').value);
 
-            if (x === '' || y === '' || z === '') {
-                alert('Por favor, ingresa valores para Xa, Xb, Ya y Yb');
+            if (isNaN(xa) || isNaN(ya) || isNaN(xb) || isNaN(yb)) {
+                alert('Por favor, ingresa valores numéricos válidos');
                 return;
             }
 
-            const response = await fetch('/add_point', {
+            const response = await fetch('/add_line', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ x: parseFloat(x), y: parseFloat(y), z: parseFloat(z) })
+                body: JSON.stringify({ xa, ya, xb, yb })
             });
 
             const updatedData = await response.json();
             renderPlot(updatedData);
+            updateTable(updatedData);
+        }
+
+        function updateTable(data) {
+            const tableBody = document.getElementById('coordTableBody');
+            tableBody.innerHTML = ''; // Limpiar la tabla antes de actualizar
+
+            data.lines.forEach((line, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${line.xa}</td>
+                    <td>${line.ya}</td>
+                    <td>${line.xb}</td>
+                    <td>${line.yb}</td>
+                    <td><button onclick="deleteLine(${index})">Eliminar</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function deleteLine(index) {
+            await fetch(`/delete_line/${index}`, { method: 'POST' });
+            fetchData();
         }
 
         async function clearData() {
@@ -83,4 +115,3 @@
     </script>
 </body>
 </html>
-    
