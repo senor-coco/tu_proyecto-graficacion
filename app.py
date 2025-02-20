@@ -27,14 +27,21 @@ def add_line():
     x_values, y_values = [], []
 
     for _ in range(int(steps) + 1):
-        x_values.append(round(x))
-        y_values.append(round(y))
+        x_values.append(round(x, 2))
+        y_values.append(round(y, 2))
         x += x_inc
         y += y_inc
 
+    # 📌 Cálculo de la pendiente
+    if dx == 0:
+        pendiente = "Indefinida"  # Línea vertical
+    else:
+        pendiente = round(dy / dx, 4)
+
     data["lines"].append({
         "xa": xa, "ya": ya, "xb": xb, "yb": yb, 
-        "x_values": x_values, "y_values": y_values
+        "x_values": x_values, "y_values": y_values,
+        "pendiente": pendiente  # Agregamos la pendiente
     })
     
     return jsonify(data)

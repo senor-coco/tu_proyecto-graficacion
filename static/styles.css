@@ -1,0 +1,54 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+}
+
+.container {
+    display: flex;
+    gap: 20px;
+}
+
+.input-section {
+    margin-bottom: 10px;
+}
+
+.table-container {
+    width: 400px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid black;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    text-align: center;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 5px;
+}
+
+th {
+    background-color: #333;
+    color: white;
+}
+
+#plot {
+    width: 500px;
+    height: 500px;
+}
+
+.btn {
+    background-color: red;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+    margin-top: 10px;
+}
