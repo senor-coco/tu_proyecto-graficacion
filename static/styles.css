@@ -1,3 +1,4 @@
+/* Estilos Globales */
 body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -10,23 +11,69 @@ body {
 .container {
     display: flex;
     gap: 20px;
+    flex-direction: column; /* Coloca los elementos de arriba hacia abajo */
+    align-items: flex-start; /* Alinea los elementos hacia la izquierda */
+    width: 100%;
+    max-width: 1200px;        /* Máximo ancho del contenedor */
+    padding: 20px;
 }
 
+/* 🏷️ Título Principal */
+h1 {
+    text-align: center;       /* Centra el título */
+    margin-bottom: 30px;      /* Espacio debajo del título */
+    background: white;
+    padding: 10px;
+    width: 100%;
+    border-bottom: 2px solid #ddd;
+    margin-top: 60px;          /* Mueve el título un poco hacia abajo */
+}
+
+/* 🎛️ Sección de entradas */
 .input-section {
+    background: #f8f8f8;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 30px;
+    margin-left: -1350px;        /* Mueve la sección de entradas hacia la derecha */
+    margin-top: 200px;           /* Mueve la sección hacia abajo */
+}
+
+/* 🧩 Grupo de entradas */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
     margin-bottom: 10px;
 }
 
+.input-group label {
+    font-weight: bold;
+}
+
+/* 🗒️ Tabla del historial de coordenadas */
 .table-container {
-    width: 400px;
+    width: 100%;
+    max-width: 400px;
     max-height: 300px;
     overflow-y: auto;
     border: 1px solid black;
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-left: 60px;        /* Mueve la tabla 60px hacia la izquierda */
+    margin-bottom: 30px;
 }
 
+/* 🧮 Estilos de la tabla */
 table {
     border-collapse: collapse;
     width: 100%;
-    text-align: center;
+    text-align: left;         /* Cambié la alineación de los datos */
 }
 
 th, td {
@@ -39,16 +86,55 @@ th {
     color: white;
 }
 
+/* 📊 Estilo del gráfico */
 #plot {
-    width: 500px;
-    height: 500px;
+    width: 80%;      /* Ajusta el tamaño del gráfico */
+    height: 400px;   /* Ajusta la altura */
+    margin: 0 auto;  /* Centra el gráfico horizontalmente */
+    margin-left: 60px; /* Mueve el gráfico 60px hacia la izquierda */
 }
 
+/* 🗑️ Botón de eliminar */
 .btn {
     background-color: red;
     color: white;
     padding: 5px 10px;
     border: none;
     cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;   /* Espacio arriba del botón */
+}
+
+.btn:hover {
+    background-color: darkred; /* Cambio de color al pasar el ratón */
+}
+
+/* Ajustes para el diseño general */
+input[type="number"] {
+    padding: 5px;
+    width: 100%;
+    box-sizing: border-box; /* Asegura que el padding no rompa el ancho del input */
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+input[type="number"]:focus {
+    outline: none; /* Elimina el borde de enfoque predeterminado */
+    border-color: #007bff; /* Añade un color azul cuando está enfocado */
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
     margin-top: 10px;
+}
+
+button:hover {
+    background-color: #45a049; /* Cambio de color al pasar el ratón */
 }

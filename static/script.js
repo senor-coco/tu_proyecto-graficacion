@@ -14,17 +14,19 @@ function renderPlot(data) {
             y: line.y_values,
             z: Array(line.x_values.length).fill(0),
             mode: 'lines+markers',
-            line: { color: 'blue', width: 2 },
-            marker: { size: 4, color: 'red' },
+            line: { color: 'blue', width: 3 }, // Línea más gruesa para mayor visibilidad
+            marker: { size: 6, color: 'red' }, // Marcadores más grandes
             type: 'scatter3d'
         });
     });
 
     const layout = {
+        width: 900,  // Ajuste de tamaño del gráfico
+        height: 650,
         scene: {
-            xaxis: { range: [-999, 999], title: "X" },
-            yaxis: { range: [-999, 999], title: "Y" },
-            zaxis: { range: [-10, 10], title: "Z" }, 
+            xaxis: { range: [-99, 99], title: "X" },
+            yaxis: { range: [-99, 99], title: "Y" },
+            zaxis: { range: [-99, 99], title: "Z" },
         }
     };
 
@@ -42,15 +44,17 @@ async function addLine() {
         return;
     }
 
-    if (xa < -999 || xa > 999 || ya < -999 || ya > 999 || xb < -999 || xb > 999 || yb < -999 || yb > 999) {
-        alert('Los valores deben estar entre -999 y 999');
+    if (xa < -99 || xa > 99 || ya < -99 || ya > 99 || xb < -99 || xb > 99 || yb < -99 || yb > 99) {
+        alert('Los valores deben estar entre -99 y 99');
         return;
     }
+
+    let pendiente = xb - xa === 0 ? "Indefinida" : ((yb - ya) / (xb - xa)).toFixed(4);
 
     const response = await fetch('/add_line', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ xa, ya, xb, yb })
+        body: JSON.stringify({ xa, ya, xb, yb, pendiente })
     });
 
     const updatedData = await response.json();
@@ -60,7 +64,7 @@ async function addLine() {
 
 function updateTable(data) {
     const tableBody = document.getElementById('coordTableBody');
-    tableBody.innerHTML = ''; 
+    tableBody.innerHTML = '';
 
     data.lines.forEach(line => {
         line.x_values.forEach((x, i) => {
@@ -73,9 +77,19 @@ function updateTable(data) {
     });
 }
 
+// Función para limpiar los valores ingresados en Xa, Ya, Xb, Yb
+function clearInputs() {
+    document.getElementById('xa').value = "";
+    document.getElementById('ya').value = "";
+    document.getElementById('xb').value = "";
+    document.getElementById('yb').value = "";
+}
+
+// Elimina todos los datos almacenados en el historial y borra el gráfico
 async function clearData() {
     await fetch('/clear_data', { method: 'POST' });
     fetchData();
 }
 
+// Cargar los datos al inicio
 fetchData();
