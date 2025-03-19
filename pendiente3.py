@@ -7,6 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 colores_octantes = ['red', 'green', 'blue', 'orange', 'purple', 'brown', 'pink', 'gray']  # Lista global de colores
 # Variable global para el color de relleno del triángulo
 color_relleno_triangulo = 'red'
+color_elipse = 'blue'  # Color inicial para la elipse
 
 # Función para inicializar la gráfica vacía
 def inicializar_grafica():
@@ -466,6 +467,25 @@ def zoom_manual_triangulo():
     except ValueError:
         messagebox.showerror("Error", "Por favor, ingresa valores numéricos válidos para el zoom.")
 
+# Función para hacer zoom manual en la elipse
+def zoom_manual_elipse():
+    try:
+        # Obtener los valores de los campos de entrada para el zoom manual
+        lim_x_min = float(entry_lim_x_min_elipse.get())
+        lim_x_max = float(entry_lim_x_max_elipse.get())
+        lim_y_min = float(entry_lim_y_min_elipse.get())
+        lim_y_max = float(entry_lim_y_max_elipse.get())
+
+        # Actualizar los límites de la gráfica
+        ax.set_xlim(lim_x_min, lim_x_max)
+        ax.set_ylim(lim_y_min, lim_y_max)
+
+        # Redibujar la gráfica con el zoom aplicado
+        canvas.draw()
+
+    except ValueError:
+        messagebox.showerror("Error", "Por favor, ingresa valores numéricos válidos para el zoom.")
+
 # Función para mostrar la pantalla de inicio
 def mostrar_pantalla_inicio():
     # Ocultar otros frames
@@ -475,6 +495,7 @@ def mostrar_pantalla_inicio():
     frame_linea_recta.pack_forget()
     frame_triangulo.pack_forget()
     frame_circulo.pack_forget()
+    frame_elipse.pack_forget()  # Ocultar el frame de la elipse
 
     # Mostrar pantalla de inicio
     frame_inicio.pack(expand=True, fill='both')
@@ -487,6 +508,7 @@ def mostrar_menu_trazado():
     frame_linea_recta.pack_forget()
     frame_triangulo.pack_forget()
     frame_circulo.pack_forget()
+    frame_elipse.pack_forget()  # Ocultar el frame de la elipse
     frame_trazado.pack(expand=True, fill='both')
 
 # Función para mostrar el menú de opciones
@@ -497,6 +519,7 @@ def mostrar_menu_opciones():
     frame_linea_recta.pack_forget()
     frame_triangulo.pack_forget()
     frame_circulo.pack_forget()
+    frame_elipse.pack_forget()  # Ocultar el frame de la elipse
     frame_opciones.pack(expand=True, fill='both')
 
 # Función para mostrar la interfaz de línea recta
@@ -506,6 +529,7 @@ def mostrar_linea_recta():
     frame_opciones.pack_forget()
     frame_triangulo.pack_forget()
     frame_circulo.pack_forget()
+    frame_elipse.pack_forget()  # Ocultar el frame de la elipse
     frame_grafica.pack(side='right', expand=True, fill='both')
     frame_linea_recta.pack(side='left', fill='both')
 
@@ -516,6 +540,7 @@ def mostrar_triangulo():
     frame_opciones.pack_forget()
     frame_linea_recta.pack_forget()
     frame_circulo.pack_forget()
+    frame_elipse.pack_forget()  # Ocultar el frame de la elipse
     frame_grafica.pack(side='right', expand=True, fill='both')
     frame_triangulo.pack(side='left', fill='both')
 
@@ -526,8 +551,105 @@ def mostrar_circulo():
     frame_opciones.pack_forget()
     frame_linea_recta.pack_forget()
     frame_triangulo.pack_forget()
+    frame_elipse.pack_forget()  # Ocultar el frame de la elipse
     frame_grafica.pack(side='right', expand=True, fill='both')
     frame_circulo.pack(side='left', fill='both')
+
+# Función para mostrar la interfaz de elipse
+def mostrar_elipse():
+    frame_inicio.pack_forget()
+    frame_trazado.pack_forget()
+    frame_opciones.pack_forget()
+    frame_linea_recta.pack_forget()
+    frame_triangulo.pack_forget()
+    frame_circulo.pack_forget()
+    frame_grafica.pack(side='right', expand=True, fill='both')
+    frame_elipse.pack(side='left', fill='both')
+
+# Función para calcular y graficar una elipse usando el método del punto medio
+def calcular_y_graficar_elipse():
+    try:
+        xc = int(entry_xc_elipse.get())
+        yc = int(entry_yc_elipse.get())
+        rx = int(entry_rx_elipse.get())
+        ry = int(entry_ry_elipse.get())
+        
+        # Generar puntos de la elipse
+        points = draw_ellipse_midpoint(xc, yc, rx, ry)
+        x_coords = [p[0] for p in points]
+        y_coords = [p[1] for p in points]
+        
+        # Limpiar la gráfica actual
+        ax.cla()
+        ax.set_title("Elipse - Método del Punto Medio")
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.grid(True)
+        ax.set_aspect('equal', 'box')
+        
+        # Graficar la elipse
+        ax.scatter(x_coords, y_coords, color=color_elipse, s=1)
+        
+        # Ajustar los límites de la gráfica
+        ax.set_xlim(xc - rx - 10, xc + rx + 10)
+        ax.set_ylim(yc - ry - 10, yc + ry + 10)
+        
+        # Redibujar la gráfica
+        canvas.draw()
+        
+    except ValueError:
+        messagebox.showerror("Error", "Por favor, ingresa valores numéricos válidos.")
+
+# Función para dibujar una elipse usando el algoritmo del punto medio (horizontal)
+def draw_ellipse_midpoint(xc, yc, rx, ry):
+    points = []
+    x = 0
+    y = ry
+    rx2 = rx * rx
+    ry2 = ry * ry
+    p = ry2 - rx2 * ry + 0.25 * rx2
+    
+    # Región 1
+    while ry2 * x < rx2 * y:
+        points.append((x + xc, y + yc))
+        points.append((-x + xc, y + yc))
+        points.append((x + xc, -y + yc))
+        points.append((-x + xc, -y + yc))
+        
+        if p < 0:
+            x += 1
+            p += 2 * ry2 * x + ry2
+        else:
+            x += 1
+            y -= 1
+            p += 2 * ry2 * x - 2 * rx2 * y + ry2
+    
+    # Región 2
+    p = ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2
+    
+    while y >= 0:
+        points.append((x + xc, y + yc))
+        points.append((-x + xc, y + yc))
+        points.append((x + xc, -y + yc))
+        points.append((-x + xc, -y + yc))
+        
+        if p > 0:
+            y -= 1
+            p += -2 * rx2 * y + rx2
+        else:
+            x += 1
+            y -= 1
+            p += 2 * ry2 * x - 2 * rx2 * y + rx2
+    
+    return points
+
+# Función para cambiar el color de la elipse
+def cambiar_color_elipse():
+    global color_elipse
+    color = colorchooser.askcolor(title="Seleccionar color de la elipse")[1]
+    if color:
+        color_elipse = color
+        calcular_y_graficar_elipse()
 
 # Configuración de la ventana principal
 root = tk.Tk()
@@ -547,7 +669,8 @@ tk.Label(frame_trazado, text="Selección de Trazado", font=("Arial", 16)).pack(p
 tk.Button(frame_trazado, text="1. Línea Recta", command=mostrar_linea_recta, width=20).pack(pady=10)
 tk.Button(frame_trazado, text="2. Triángulo", command=mostrar_triangulo, width=20).pack(pady=10)
 tk.Button(frame_trazado, text="3. Círculo", command=mostrar_circulo, width=20).pack(pady=10)
-tk.Button(frame_trazado, text="4. Regresar", command=mostrar_pantalla_inicio, width=20).pack(pady=10)
+tk.Button(frame_trazado, text="4. Elipse", command=mostrar_elipse, width=20).pack(pady=10)  # Nueva opción
+tk.Button(frame_trazado, text="5. Regresar", command=mostrar_pantalla_inicio, width=20).pack(pady=10)
 
 # Frame de opciones
 frame_opciones = tk.Frame(root)
@@ -819,6 +942,75 @@ tk.Button(frame_circulo, text="Regresar al Menú", command=mostrar_pantalla_inic
 # Frame de gráfica
 frame_grafica = tk.Frame(root, padx=10, pady=10, bg='white')
 
+# Frame de elipse
+frame_elipse = tk.Frame(root, padx=20, pady=20, width=550, height=600)
+frame_elipse.pack_propagate(False)  # Evita que el frame se ajuste al contenido
+tk.Label(frame_elipse, text="Elipse - Método del Punto Medio", font=("Arial", 12, "bold")).pack(pady=5)
+
+# Entradas para la elipse
+tk.Label(frame_elipse, text="Centro (Xc, Yc):").pack()
+entry_xc_elipse = tk.Entry(frame_elipse, width=10)
+entry_xc_elipse.pack()
+entry_yc_elipse = tk.Entry(frame_elipse, width=10)
+entry_yc_elipse.pack()
+
+tk.Label(frame_elipse, text="Radio X (rx):").pack()
+entry_rx_elipse = tk.Entry(frame_elipse, width=10)
+entry_rx_elipse.pack()
+
+tk.Label(frame_elipse, text="Radio Y (ry):").pack()
+entry_ry_elipse = tk.Entry(frame_elipse, width=10)
+entry_ry_elipse.pack()
+
+# Frame para botones de la elipse
+frame_botones_elipse = tk.Frame(frame_elipse)
+frame_botones_elipse.pack(pady=10)
+
+# Botón para graficar la elipse
+tk.Button(frame_botones_elipse, text="Graficar Elipse", command=calcular_y_graficar_elipse, bg="green", fg="white").pack(side='left', padx=5)
+
+# Botón para cambiar el color de la elipse
+tk.Button(frame_botones_elipse, text="Cambiar Color", command=cambiar_color_elipse, bg="blue", fg="white").pack(side='left', padx=5)
+
+# Botón para limpiar la gráfica
+tk.Button(frame_botones_elipse, text="Limpiar Gráfica", command=limpiar_grafica, bg="red", fg="white").pack(side='left', padx=5)
+
+# Campos de entrada para el zoom manual en la elipse
+tk.Label(frame_elipse, text="Zoom Manual", font=("Arial", 12, "bold")).pack(pady=10)
+
+# Frame para los límites de X
+frame_zoom_x_elipse = tk.Frame(frame_elipse)
+frame_zoom_x_elipse.pack()
+
+tk.Label(frame_zoom_x_elipse, text="Limite X Min:").grid(row=0, column=0, padx=5)
+entry_lim_x_min_elipse = tk.Entry(frame_zoom_x_elipse, width=10)
+entry_lim_x_min_elipse.grid(row=0, column=1, padx=5)
+
+tk.Label(frame_zoom_x_elipse, text="Limite X Max:").grid(row=0, column=2, padx=5)
+entry_lim_x_max_elipse = tk.Entry(frame_zoom_x_elipse, width=10)
+entry_lim_x_max_elipse.grid(row=0, column=3, padx=5)
+
+# Frame para los límites de Y
+frame_zoom_y_elipse = tk.Frame(frame_elipse)
+frame_zoom_y_elipse.pack()
+
+tk.Label(frame_zoom_y_elipse, text="Limite Y Min:").grid(row=0, column=0, padx=5)
+entry_lim_y_min_elipse = tk.Entry(frame_zoom_y_elipse, width=10)
+entry_lim_y_min_elipse.grid(row=0, column=1, padx=5)
+
+tk.Label(frame_zoom_y_elipse, text="Limite Y Max:").grid(row=0, column=2, padx=5)
+entry_lim_y_max_elipse = tk.Entry(frame_zoom_y_elipse, width=10)
+entry_lim_y_max_elipse.grid(row=0, column=3, padx=5)
+
+# Frame para los botones de zoom y limpiar
+frame_botones_zoom_elipse = tk.Frame(frame_elipse)
+frame_botones_zoom_elipse.pack(pady=10)
+
+# Botón para aplicar zoom manual
+tk.Button(frame_botones_zoom_elipse, text="Aplicar Zoom", command=zoom_manual_elipse, bg="blue", fg="white").grid(row=0, column=0, padx=5)
+
+# Botón para regresar al menú
+tk.Button(frame_elipse, text="Regresar al Menú", command=mostrar_pantalla_inicio, bg="gray", fg="white").pack(pady=10)
 
 # Inicializar la gráfica vacía
 inicializar_grafica()
