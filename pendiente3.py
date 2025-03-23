@@ -137,27 +137,15 @@ def calcular_y_graficar_circulo():
         P = 1 - r  # Parámetro de decisión inicial
 
         while x <= y:
-            # Verificar si el punto cumple con la ecuación del círculo
-            def punto_valido(x, y):
-                return (x - xc) ** 2 + (y - yc) ** 2 <= r ** 2
-
-            # Almacenar los puntos en cada octante solo si son válidos
-            if punto_valido(xc + x, yc + y):
-                octantes[0].append((xc + x, yc + y))
-            if punto_valido(xc + y, yc + x):
-                octantes[1].append((xc + y, yc + x))
-            if punto_valido(xc + y, yc - x):
-                octantes[2].append((xc + y, yc - x))
-            if punto_valido(xc + x, yc - y):
-                octantes[3].append((xc + x, yc - y))
-            if punto_valido(xc - x, yc - y):
-                octantes[4].append((xc - x, yc - y))
-            if punto_valido(xc - y, yc - x):
-                octantes[5].append((xc - y, yc - x))
-            if punto_valido(xc - y, yc + x):
-                octantes[6].append((xc - y, yc + x))
-            if punto_valido(xc - x, yc + y):
-                octantes[7].append((xc - x, yc + y))
+            # Almacenar los puntos en cada octante
+            octantes[0].append((xc + x, yc + y))
+            octantes[1].append((xc + y, yc + x))
+            octantes[2].append((xc + y, yc - x))
+            octantes[3].append((xc + x, yc - y))
+            octantes[4].append((xc - x, yc - y))
+            octantes[5].append((xc - y, yc - x))
+            octantes[6].append((xc - y, yc + x))
+            octantes[7].append((xc - x, yc + y))
 
             # Actualizar el parámetro de decisión
             if P < 0:
