@@ -8,6 +8,7 @@ colores_octantes = ['red', 'green', 'blue', 'orange', 'purple', 'brown', 'pink',
 # Variable global para el color de relleno del triángulo
 color_relleno_triangulo = 'red'
 color_elipse = 'blue'  # Color inicial para la elipse
+colores_segmentos_elipse = ['red', 'green', 'blue', 'yellow']  # Colores para los 4 segmentos de la elipse
 
 # Función para inicializar la gráfica vacía
 def inicializar_grafica():
@@ -31,6 +32,27 @@ def inicializar_grafica():
 
     # Conectar el evento de movimiento del mouse con la función de mostrar coordenadas
     canvas.mpl_connect('motion_notify_event', on_move)
+    # Conectar el evento de la rueda del mouse para hacer zoom
+    canvas.mpl_connect('scroll_event', on_scroll)
+
+# Función para manejar el zoom con la rueda del mouse
+def on_scroll(event):
+    if event.inaxes != ax:  # Si el mouse no está dentro de los ejes de la gráfica
+        return
+
+    # Obtener los límites actuales de los ejes
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+
+    # Calcular el factor de zoom
+    zoom_factor = 1.1 if event.button == 'up' else 0.9
+
+    # Aplicar el zoom
+    ax.set_xlim([x * zoom_factor for x in xlim])
+    ax.set_ylim([y * zoom_factor for y in ylim])
+
+    # Redibujar la gráfica
+    canvas.draw()
 
 # Función que se ejecuta cuando el mouse se mueve sobre la gráfica
 def on_move(event):
@@ -574,11 +596,6 @@ def calcular_y_graficar_elipse():
         rx = int(entry_rx_elipse.get())
         ry = int(entry_ry_elipse.get())
         
-        # Generar puntos de la elipse
-        points = draw_ellipse_midpoint(xc, yc, rx, ry)
-        x_coords = [p[0] for p in points]
-        y_coords = [p[1] for p in points]
-        
         # Limpiar la gráfica actual
         ax.cla()
         ax.set_title("Elipse - Método del Punto Medio")
@@ -587,8 +604,81 @@ def calcular_y_graficar_elipse():
         ax.grid(True)
         ax.set_aspect('equal', 'box')
         
-        # Graficar la elipse
+        # Inicializar listas para almacenar los puntos de la elipse
+        puntos_elipse = []
+        tabla_puntos = []  # Lista para almacenar los datos de la tabla
+        
+        # Algoritmo del Punto Medio para la Elipse (solo primer cuadrante)
+        x = 0
+        y = ry
+        rx2 = rx * rx
+        ry2 = ry * ry
+        p = ry2 - rx2 * ry + 0.25 * rx2  # Parámetro de decisión inicial
+        
+        # Región 1 (Pendiente < -1)
+        while ry2 * x < rx2 * y:
+            # Agregar puntos a la tabla
+            tabla_puntos.append((len(tabla_puntos), x, y, p))
+            
+            # Puntos en los 4 cuadrantes (simetría)
+            puntos_elipse.append((x + xc, y + yc))
+            puntos_elipse.append((-x + xc, y + yc))
+            puntos_elipse.append((x + xc, -y + yc))
+            puntos_elipse.append((-x + xc, -y + yc))
+            
+            # Actualizar parámetro de decisión
+            if p < 0:
+                p += 2 * ry2 * x + ry2
+            else:
+                p += 2 * ry2 * x - 2 * rx2 * y + ry2
+                y -= 1
+            x += 1
+        
+        # Región 2 (Pendiente >= -1)
+        p = ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2
+        while y >= 0:
+            # Agregar puntos a la tabla
+            tabla_puntos.append((len(tabla_puntos), x, y, p))
+            
+            # Puntos en los 4 cuadrantes (simetría)
+            puntos_elipse.append((x + xc, y + yc))
+            puntos_elipse.append((-x + xc, y + yc))
+            puntos_elipse.append((x + xc, -y + yc))
+            puntos_elipse.append((-x + xc, -y + yc))
+            
+            # Actualizar parámetro de decisión
+            if p > 0:
+                p += -2 * rx2 * y + rx2
+            else:
+                p += 2 * ry2 * x - 2 * rx2 * y + rx2
+                x += 1
+            y -= 1
+        
+        # Dibujar la elipse
+        x_coords = [p[0] for p in puntos_elipse]
+        y_coords = [p[1] for p in puntos_elipse]
         ax.scatter(x_coords, y_coords, color=color_elipse, s=1)
+        
+        # Dividir la elipse en 4 segmentos y rellenar con colores distintos
+        # Segmento 1: Primer cuadrante (0° a 90°)
+        segmento1_x = [xc] + [x for x, y in puntos_elipse if x >= xc and y >= yc]
+        segmento1_y = [yc] + [y for x, y in puntos_elipse if x >= xc and y >= yc]
+        ax.fill(segmento1_x, segmento1_y, color=colores_segmentos_elipse[0], alpha=0.3)
+        
+        # Segmento 2: Segundo cuadrante (90° a 180°)
+        segmento2_x = [xc] + [x for x, y in puntos_elipse if x <= xc and y >= yc]
+        segmento2_y = [yc] + [y for x, y in puntos_elipse if x <= xc and y >= yc]
+        ax.fill(segmento2_x, segmento2_y, color=colores_segmentos_elipse[1], alpha=0.3)
+        
+        # Segmento 3: Tercer cuadrante (180° a 270°)
+        segmento3_x = [xc] + [x for x, y in puntos_elipse if x <= xc and y <= yc]
+        segmento3_y = [yc] + [y for x, y in puntos_elipse if x <= xc and y <= yc]
+        ax.fill(segmento3_x, segmento3_y, color=colores_segmentos_elipse[2], alpha=0.3)
+        
+        # Segmento 4: Cuarto cuadrante (270° a 360°)
+        segmento4_x = [xc] + [x for x, y in puntos_elipse if x >= xc and y <= yc]
+        segmento4_y = [yc] + [y for x, y in puntos_elipse if x >= xc and y <= yc]
+        ax.fill(segmento4_x, segmento4_y, color=colores_segmentos_elipse[3], alpha=0.3)
         
         # Ajustar los límites de la gráfica
         ax.set_xlim(xc - rx - 10, xc + rx + 10)
@@ -597,8 +687,26 @@ def calcular_y_graficar_elipse():
         # Redibujar la gráfica
         canvas.draw()
         
+        # Mostrar la tabla de puntos de la elipse
+        mostrar_tabla_elipse(tabla_puntos)
+        
     except ValueError:
         messagebox.showerror("Error", "Por favor, ingresa valores numéricos válidos.")
+
+# Función para mostrar la tabla de puntos de la elipse
+def mostrar_tabla_elipse(tabla_puntos):
+    # Limpiar el frame de la tabla
+    for widget in frame_tabla_elipse.winfo_children():
+        widget.destroy()
+
+    # Crear un widget Text para mostrar la tabla
+    tabla_texto = tk.Text(frame_tabla_elipse, height=20, width=40, font=("Arial", 12))
+    tabla_texto.insert(tk.END, f"{'Iteración (k)':<12}{'X (Xk+1)':<12}{'Y (Yk-1)':<12}{'Pk':<12}\n")
+    tabla_texto.insert(tk.END, f"{'-'*48}\n")
+    for k, x, y, pk in tabla_puntos:
+        tabla_texto.insert(tk.END, f"{k:<12}{x:<12}{y:<12}{pk:.2f}\n")
+    tabla_texto.config(state='disabled')
+    tabla_texto.pack()
 
 # Función para dibujar una elipse usando el algoritmo del punto medio (horizontal)
 def draw_ellipse_midpoint(xc, yc, rx, ry):
@@ -649,6 +757,14 @@ def cambiar_color_elipse():
     color = colorchooser.askcolor(title="Seleccionar color de la elipse")[1]
     if color:
         color_elipse = color
+        calcular_y_graficar_elipse()
+
+# Función para cambiar el color de un segmento de la elipse
+def cambiar_color_segmento_elipse(segmento):
+    global colores_segmentos_elipse
+    color = colorchooser.askcolor(title=f"Seleccionar color para el segmento {segmento + 1}")[1]
+    if color:
+        colores_segmentos_elipse[segmento] = color
         calcular_y_graficar_elipse()
 
 # Configuración de la ventana principal
@@ -975,6 +1091,20 @@ tk.Button(frame_botones_elipse, text="Cambiar Color", command=cambiar_color_elip
 # Botón para limpiar la gráfica
 tk.Button(frame_botones_elipse, text="Limpiar Gráfica", command=limpiar_grafica, bg="red", fg="white").pack(side='left', padx=5)
 
+# Frame para cambiar colores de los segmentos de la elipse
+frame_colores_segmentos = tk.Frame(frame_elipse)
+frame_colores_segmentos.pack(pady=10)
+
+# Botones para cambiar el color de cada segmento de la elipse
+for i in range(4):
+    tk.Button(
+        frame_colores_segmentos, 
+        text=f"Color Segmento {i+1}", 
+        command=lambda i=i: cambiar_color_segmento_elipse(i), 
+        bg=colores_segmentos_elipse[i], 
+        fg="white"
+    ).pack(side='left', padx=5)
+
 # Campos de entrada para el zoom manual en la elipse
 tk.Label(frame_elipse, text="Zoom Manual", font=("Arial", 12, "bold")).pack(pady=10)
 
@@ -1008,6 +1138,10 @@ frame_botones_zoom_elipse.pack(pady=10)
 
 # Botón para aplicar zoom manual
 tk.Button(frame_botones_zoom_elipse, text="Aplicar Zoom", command=zoom_manual_elipse, bg="blue", fg="white").grid(row=0, column=0, padx=5)
+
+# Frame para la tabla de la elipse
+frame_tabla_elipse = tk.Frame(frame_elipse, pady=10)
+frame_tabla_elipse.pack(fill='both', expand=True)
 
 # Botón para regresar al menú
 tk.Button(frame_elipse, text="Regresar al Menú", command=mostrar_pantalla_inicio, bg="gray", fg="white").pack(pady=10)
