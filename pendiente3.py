@@ -604,95 +604,90 @@ def calcular_y_graficar_elipse():
         ax.grid(True)
         ax.set_aspect('equal', 'box')
         
-        # Inicializar listas para almacenar los puntos de la elipse
+        # Inicializar listas
         puntos_elipse = []
-        tabla_puntos = []  # Lista para almacenar los datos de la tabla
+        tabla_puntos = []
         
-        # Algoritmo del Punto Medio para la Elipse (solo primer cuadrante)
-        x = 0
-        y = ry
+        # Valores auxiliares
         rx2 = rx * rx
         ry2 = ry * ry
-        p = ry2 - rx2 * ry + 0.25 * rx2  # Parámetro de decisión inicial
+        dos_ry2 = 2 * ry2
+        dos_rx2 = 2 * rx2
         
-        # Región 1 (Pendiente < -1)
-        while ry2 * x < rx2 * y:
-            # Agregar puntos a la tabla
-            tabla_puntos.append((len(tabla_puntos), x, y, p))
+        # Algoritmo del Punto Medio para Elipse
+        x = 0
+        y = ry
+        
+        # REGIÓN 1
+        # Parámetro de decisión inicial
+        P = round(ry2 - rx2*ry + 0.25*rx2, 2)
+        tabla_puntos.append((0, x, y, P))
+        
+        while dos_ry2*x < dos_rx2*y:
+            # Agregar puntos simétricos
+            puntos_elipse.extend([(xc+x, yc+y), (xc-x, yc+y), 
+                                (xc+x, yc-y), (xc-x, yc-y)])
             
-            # Puntos en los 4 cuadrantes (simetría)
-            puntos_elipse.append((x + xc, y + yc))
-            puntos_elipse.append((-x + xc, y + yc))
-            puntos_elipse.append((x + xc, -y + yc))
-            puntos_elipse.append((-x + xc, -y + yc))
-            
-            # Actualizar parámetro de decisión
-            if p < 0:
-                p += 2 * ry2 * x + ry2
-            else:
-                p += 2 * ry2 * x - 2 * rx2 * y + ry2
-                y -= 1
             x += 1
-        
-        # Región 2 (Pendiente >= -1)
-        p = ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2
-        while y >= 0:
-            # Agregar puntos a la tabla
-            tabla_puntos.append((len(tabla_puntos), x, y, p))
-            
-            # Puntos en los 4 cuadrantes (simetría)
-            puntos_elipse.append((x + xc, y + yc))
-            puntos_elipse.append((-x + xc, y + yc))
-            puntos_elipse.append((x + xc, -y + yc))
-            puntos_elipse.append((-x + xc, -y + yc))
-            
-            # Actualizar parámetro de decisión
-            if p > 0:
-                p += -2 * rx2 * y + rx2
+            if P < 0:
+                P += dos_ry2*x + ry2
             else:
-                p += 2 * ry2 * x - 2 * rx2 * y + rx2
-                x += 1
+                y -= 1
+                P += dos_ry2*x - dos_rx2*y + ry2
+            
+            tabla_puntos.append((len(tabla_puntos), x, y, round(P, 2)))
+        
+        # REGIÓN 2
+        P = round(ry2*(x+0.5)**2 + rx2*(y-1)**2 - rx2*ry2, 2)
+        tabla_puntos.append((len(tabla_puntos), x, y, P))
+        
+        while y >= 0:
+            puntos_elipse.extend([(xc+x, yc+y), (xc-x, yc+y), 
+                                (xc+x, yc-y), (xc-x, yc-y)])
+            
             y -= 1
+            if P > 0:
+                P += -dos_rx2*y + rx2
+            else:
+                x += 1
+                P += dos_ry2*x - dos_rx2*y + rx2
+            
+            if y >= 0:
+                tabla_puntos.append((len(tabla_puntos), x, y, round(P, 2)))
         
         # Dibujar la elipse
         x_coords = [p[0] for p in puntos_elipse]
         y_coords = [p[1] for p in puntos_elipse]
         ax.scatter(x_coords, y_coords, color=color_elipse, s=1)
         
-        # Dividir la elipse en 4 segmentos y rellenar con colores distintos
-        # Segmento 1: Primer cuadrante (0° a 90°)
-        segmento1_x = [xc] + [x for x, y in puntos_elipse if x >= xc and y >= yc]
-        segmento1_y = [yc] + [y for x, y in puntos_elipse if x >= xc and y >= yc]
-        ax.fill(segmento1_x, segmento1_y, color=colores_segmentos_elipse[0], alpha=0.3)
+        # Rellenar segmentos
+        segmentos = [
+            [p for p in puntos_elipse if p[0] >= xc and p[1] >= yc],  # Cuadrante I
+            [p for p in puntos_elipse if p[0] <= xc and p[1] >= yc],  # Cuadrante II
+            [p for p in puntos_elipse if p[0] <= xc and p[1] <= yc],  # Cuadrante III
+            [p for p in puntos_elipse if p[0] >= xc and p[1] <= yc]   # Cuadrante IV
+        ]
         
-        # Segmento 2: Segundo cuadrante (90° a 180°)
-        segmento2_x = [xc] + [x for x, y in puntos_elipse if x <= xc and y >= yc]
-        segmento2_y = [yc] + [y for x, y in puntos_elipse if x <= xc and y >= yc]
-        ax.fill(segmento2_x, segmento2_y, color=colores_segmentos_elipse[1], alpha=0.3)
+        for i, segmento in enumerate(segmentos):
+            if segmento:
+                xs = [xc] + [p[0] for p in segmento]
+                ys = [yc] + [p[1] for p in segmento]
+                ax.fill(xs, ys, color=colores_segmentos_elipse[i], alpha=0.3)
         
-        # Segmento 3: Tercer cuadrante (180° a 270°)
-        segmento3_x = [xc] + [x for x, y in puntos_elipse if x <= xc and y <= yc]
-        segmento3_y = [yc] + [y for x, y in puntos_elipse if x <= xc and y <= yc]
-        ax.fill(segmento3_x, segmento3_y, color=colores_segmentos_elipse[2], alpha=0.3)
+        # Ajustar límites
+        margen = max(rx, ry) + 10
+        ax.set_xlim(xc - margen, xc + margen)
+        ax.set_ylim(yc - margen, yc + margen)
         
-        # Segmento 4: Cuarto cuadrante (270° a 360°)
-        segmento4_x = [xc] + [x for x, y in puntos_elipse if x >= xc and y <= yc]
-        segmento4_y = [yc] + [y for x, y in puntos_elipse if x >= xc and y <= yc]
-        ax.fill(segmento4_x, segmento4_y, color=colores_segmentos_elipse[3], alpha=0.3)
-        
-        # Ajustar los límites de la gráfica
-        ax.set_xlim(xc - rx - 10, xc + rx + 10)
-        ax.set_ylim(yc - ry - 10, yc + ry + 10)
-        
-        # Redibujar la gráfica
+        # Redibujar
         canvas.draw()
         
-        # Mostrar la tabla de puntos de la elipse
+        # Mostrar tabla
         mostrar_tabla_elipse(tabla_puntos)
         
     except ValueError:
         messagebox.showerror("Error", "Por favor, ingresa valores numéricos válidos.")
-
+        
 # Función para mostrar la tabla de puntos de la elipse
 def mostrar_tabla_elipse(tabla_puntos):
     # Limpiar el frame de la tabla
