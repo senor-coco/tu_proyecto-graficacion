@@ -3,6 +3,7 @@ from tkinter import messagebox
 from tkinter import colorchooser
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import math
 
 colores_octantes = ['red', 'green', 'blue', 'orange', 'purple', 'brown', 'pink', 'gray']  # Lista global de colores
 # Variable global para el color de relleno del triángulo
@@ -604,9 +605,11 @@ def calcular_y_graficar_elipse():
         ax.grid(True)
         ax.set_aspect('equal', 'box')
         
-        # Inicializar listas
-        puntos_elipse = []
-        tabla_puntos = []
+        # Inicializar listas para cada cuadrante
+        cuadrante1 = []
+        cuadrante2 = []
+        cuadrante3 = []
+        cuadrante4 = []
         
         # Valores auxiliares
         rx2 = rx * rx
@@ -621,12 +624,13 @@ def calcular_y_graficar_elipse():
         # REGIÓN 1
         # Parámetro de decisión inicial
         P = round(ry2 - rx2*ry + 0.25*rx2, 2)
-        tabla_puntos.append((0, x, y, P))
         
         while dos_ry2*x < dos_rx2*y:
-            # Agregar puntos simétricos
-            puntos_elipse.extend([(xc+x, yc+y), (xc-x, yc+y), 
-                                (xc+x, yc-y), (xc-x, yc-y)])
+            # Agregar puntos a cada cuadrante
+            cuadrante1.append((x, y, P))
+            cuadrante2.append((-x, y, P))
+            cuadrante3.append((-x, -y, P))
+            cuadrante4.append((x, -y, P))
             
             x += 1
             if P < 0:
@@ -635,15 +639,17 @@ def calcular_y_graficar_elipse():
                 y -= 1
                 P += dos_ry2*x - dos_rx2*y + ry2
             
-            tabla_puntos.append((len(tabla_puntos), x, y, round(P, 2)))
+            P = round(P, 2)
         
         # REGIÓN 2
         P = round(ry2*(x+0.5)**2 + rx2*(y-1)**2 - rx2*ry2, 2)
-        tabla_puntos.append((len(tabla_puntos), x, y, P))
         
         while y >= 0:
-            puntos_elipse.extend([(xc+x, yc+y), (xc-x, yc+y), 
-                                (xc+x, yc-y), (xc-x, yc-y)])
+            # Agregar puntos a cada cuadrante
+            cuadrante1.append((x, y, P))
+            cuadrante2.append((-x, y, P))
+            cuadrante3.append((-x, -y, P))
+            cuadrante4.append((x, -y, P))
             
             y -= 1
             if P > 0:
@@ -652,15 +658,24 @@ def calcular_y_graficar_elipse():
                 x += 1
                 P += dos_ry2*x - dos_rx2*y + rx2
             
-            if y >= 0:
-                tabla_puntos.append((len(tabla_puntos), x, y, round(P, 2)))
+            P = round(P, 2)
         
         # Dibujar la elipse
+        puntos_elipse = []
+        for x, y, _ in cuadrante1:
+            puntos_elipse.append((xc + x, yc + y))
+        for x, y, _ in cuadrante2:
+            puntos_elipse.append((xc + x, yc + y))
+        for x, y, _ in cuadrante3:
+            puntos_elipse.append((xc + x, yc + y))
+        for x, y, _ in cuadrante4:
+            puntos_elipse.append((xc + x, yc + y))
+        
         x_coords = [p[0] for p in puntos_elipse]
         y_coords = [p[1] for p in puntos_elipse]
         ax.scatter(x_coords, y_coords, color=color_elipse, s=1)
         
-        # Rellenar segmentos
+        # Rellenar segmentos - SOLUCIÓN CORREGIDA PARA EL SEGMENTO 3
         segmentos = [
             [p for p in puntos_elipse if p[0] >= xc and p[1] >= yc],  # Cuadrante I
             [p for p in puntos_elipse if p[0] <= xc and p[1] >= yc],  # Cuadrante II
@@ -668,10 +683,19 @@ def calcular_y_graficar_elipse():
             [p for p in puntos_elipse if p[0] >= xc and p[1] <= yc]   # Cuadrante IV
         ]
         
+        # Ordenar los puntos de cada segmento por ángulo para un relleno correcto
+        centro = (xc, yc)
         for i, segmento in enumerate(segmentos):
             if segmento:
-                xs = [xc] + [p[0] for p in segmento]
-                ys = [yc] + [p[1] for p in segmento]
+                # Ordenar los puntos por ángulo respecto al centro
+                # Para el cuadrante III (segmento 2), ordenar en sentido antihorario
+                if i == 2:  # Cuadrante III
+                    segmento_ordenado = sorted(segmento, key=lambda p: math.atan2(centro[1]-p[1], centro[0]-p[0]), reverse=True)
+                else:
+                    segmento_ordenado = sorted(segmento, key=lambda p: math.atan2(p[1]-centro[1], p[0]-centro[0]))
+                
+                xs = [centro[0]] + [p[0] for p in segmento_ordenado] + [centro[0]]
+                ys = [centro[1]] + [p[1] for p in segmento_ordenado] + [centro[1]]
                 ax.fill(xs, ys, color=colores_segmentos_elipse[i], alpha=0.3)
         
         # Ajustar límites
@@ -682,26 +706,86 @@ def calcular_y_graficar_elipse():
         # Redibujar
         canvas.draw()
         
-        # Mostrar tabla
-        mostrar_tabla_elipse(tabla_puntos)
+        # Mostrar tablas por cuadrante
+        mostrar_tablas_elipse(cuadrante1, cuadrante2, cuadrante3, cuadrante4)
         
     except ValueError:
         messagebox.showerror("Error", "Por favor, ingresa valores numéricos válidos.")
-        
-# Función para mostrar la tabla de puntos de la elipse
-def mostrar_tabla_elipse(tabla_puntos):
+
+
+# Función para mostrar las tablas de la elipse por cuadrante
+def mostrar_tablas_elipse(cuadrante1, cuadrante2, cuadrante3, cuadrante4):
     # Limpiar el frame de la tabla
     for widget in frame_tabla_elipse.winfo_children():
         widget.destroy()
 
-    # Crear un widget Text para mostrar la tabla
-    tabla_texto = tk.Text(frame_tabla_elipse, height=20, width=40, font=("Arial", 12))
-    tabla_texto.insert(tk.END, f"{'Iteración (k)':<12}{'X (Xk+1)':<12}{'Y (Yk-1)':<12}{'Pk':<12}\n")
-    tabla_texto.insert(tk.END, f"{'-'*48}\n")
-    for k, x, y, pk in tabla_puntos:
-        tabla_texto.insert(tk.END, f"{k:<12}{x:<12}{y:<12}{pk:.2f}\n")
-    tabla_texto.config(state='disabled')
-    tabla_texto.pack()
+    # Crear un frame principal con scrollbar
+    main_frame = tk.Frame(frame_tabla_elipse)
+    main_frame.pack(fill='both', expand=True)
+
+    # Crear un canvas y scrollbar
+    canvas_tabla = tk.Canvas(main_frame)
+    scrollbar = tk.Scrollbar(main_frame, orient='vertical', command=canvas_tabla.yview)
+    scrollable_frame = tk.Frame(canvas_tabla)
+
+    # Configurar el canvas
+    canvas_tabla.configure(yscrollcommand=scrollbar.set)
+    canvas_tabla.pack(side='left', fill='both', expand=True)
+    scrollbar.pack(side='right', fill='y')
+    canvas_tabla.create_window((0, 0), window=scrollable_frame, anchor='nw')
+    scrollable_frame.bind('<Configure>', lambda e: canvas_tabla.configure(scrollregion=canvas_tabla.bbox('all')))
+
+    # Función para crear una tabla de cuadrante
+    def crear_tabla_cuadrante(frame, datos, titulo):
+        frame_cuadrante = tk.Frame(frame, bd=2, relief='groove')
+        tk.Label(frame_cuadrante, text=titulo, font=('Arial', 10, 'bold')).pack()
+        
+        # Crear widget Text con scrollbar
+        text_frame = tk.Frame(frame_cuadrante)
+        text_frame.pack(fill='both', expand=True)
+        
+        text = tk.Text(text_frame, height=10, width=30, wrap='none')
+        scroll = tk.Scrollbar(text_frame, command=text.yview)
+        text.configure(yscrollcommand=scroll.set)
+        
+        scroll.pack(side='right', fill='y')
+        text.pack(side='left', fill='both', expand=True)
+        
+        # Insertar datos
+        text.insert('end', f"{'Iter':<5}{'X':<10}{'Y':<10}{'Pk':<10}\n")
+        text.insert('end', '-'*35 + '\n')
+        
+        for i, (x, y, pk) in enumerate(datos):
+            text.insert('end', f"{i:<5}{x:<10}{y:<10}{pk:<10.2f}\n")
+        
+        text.config(state='disabled')
+        return frame_cuadrante
+
+    # Crear tablas para cada cuadrante
+    frame_tablas = tk.Frame(scrollable_frame)
+    frame_tablas.pack(fill='both', expand=True, padx=10, pady=10)
+
+    # Cuadrante 1 (Superior derecho)
+    frame_c1 = crear_tabla_cuadrante(frame_tablas, cuadrante1, "Cuadrante I (Superior derecho)")
+    frame_c1.grid(row=0, column=0, padx=5, pady=5, sticky='nsew')
+
+    # Cuadrante 2 (Superior izquierdo)
+    frame_c2 = crear_tabla_cuadrante(frame_tablas, cuadrante2, "Cuadrante II (Superior izquierdo)")
+    frame_c2.grid(row=0, column=1, padx=5, pady=5, sticky='nsew')
+
+    # Cuadrante 3 (Inferior izquierdo)
+    frame_c3 = crear_tabla_cuadrante(frame_tablas, cuadrante3, "Cuadrante III (Inferior izquierdo)")
+    frame_c3.grid(row=1, column=0, padx=5, pady=5, sticky='nsew')
+
+    # Cuadrante 4 (Inferior derecho)
+    frame_c4 = crear_tabla_cuadrante(frame_tablas, cuadrante4, "Cuadrante IV (Inferior derecho)")
+    frame_c4.grid(row=1, column=1, padx=5, pady=5, sticky='nsew')
+
+    # Configurar el grid
+    frame_tablas.grid_rowconfigure(0, weight=1)
+    frame_tablas.grid_rowconfigure(1, weight=1)
+    frame_tablas.grid_columnconfigure(0, weight=1)
+    frame_tablas.grid_columnconfigure(1, weight=1)
 
 # Función para dibujar una elipse usando el algoritmo del punto medio (horizontal)
 def draw_ellipse_midpoint(xc, yc, rx, ry):
